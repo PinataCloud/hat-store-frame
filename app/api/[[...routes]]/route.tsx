@@ -13,7 +13,7 @@ const account = privateKeyToAccount(
   (process.env.PRIVATE_KEY as `0x`) || "",
 );
 
-export const publicClient = createPublicClient({
+const publicClient = createPublicClient({
   chain: base,
   transport: http(process.env.ALCHEMY_URL),
 });
@@ -95,7 +95,7 @@ app.frame('/ad', async (c) => {
     image: "https://dweb.mypinata.cloud/ipfs/QmaQC9shWhLWQiBuWNa2YGUFARekj5Qm7iCE59H4FzeSi4",
     imageAspectRatio: '1:1',
     intents: [
-      <Button.Transaction target="/buy-discount">Buy for 0.00025 ETH</Button.Transaction>,
+      <Button.Transaction target="/buy-discount">Buy for 0.0025 ETH</Button.Transaction>,
     ]
   })
 })
