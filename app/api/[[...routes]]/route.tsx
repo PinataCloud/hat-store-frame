@@ -179,6 +179,8 @@ app.transaction("/buy", async (c) => {
     }
   }
 
+  console.log(amount)
+
   return c.contract({
     abi: abi.abi,
     chainId: "eip155:8453",
