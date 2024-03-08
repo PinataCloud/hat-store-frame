@@ -126,9 +126,9 @@ app.frame("/finish", (c) => {
 
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
-  console.log(balance);
+  const supply = await remainingSupply();
 
-  if (typeof balance === "number" && balance < 1) {
+  if (typeof balance === "number" && balance < 1 && typeof supply === 'number' && supply > 0) {
     const address = await getAddresForFID(c.frameData?.fid);
     const { request: mint } = await publicClient.simulateContract({
       account,
