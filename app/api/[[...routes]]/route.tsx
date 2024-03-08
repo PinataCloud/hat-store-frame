@@ -167,11 +167,16 @@ app.frame("/ad", async (c) => {
 
 app.transaction("/buy", async (c) => {
   let amount;
-  const balance = await checkBalance(c.frameData?.fid);
-  if (typeof balance === "number" && balance > 0) {
-    amount = "0.0025";
-  } else {
+  const address = await getAddresForFID(c.frameData?.fid);
+  if (address === "null") {
     amount = "0.005";
+  } else {
+    const balance = await checkBalance(c.frameData?.fid);
+    if (typeof balance === "number" && balance > 0) {
+      amount = "0.0025";
+    } else {
+      amount = "0.005";
+    }
   }
 
   return c.contract({
