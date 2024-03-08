@@ -24,6 +24,7 @@ const walletClient = createWalletClient({
 
 async function getAddresForFID(fid: any) {
   try {
+    let address;
     const data = await fetch(
       `https://api.pinata.cloud/v3/farcaster/users/${fid}`,
       {
@@ -33,7 +34,11 @@ async function getAddresForFID(fid: any) {
       },
     );
     const dataRes = await data.json();
-    const address = dataRes.data.verifications[0];
+    if (dataRes.data.verifications > 0) {
+      address = dataRes.data.verifications[0];
+    } else {
+      address = "null";
+    }
     return address;
   } catch (error) {
     console.log(error);
@@ -111,14 +116,27 @@ app.frame("/finish", (c) => {
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
+  const address = await getAddresForFID(c.frameData?.fid);
 
+  if (address === "null") {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Transaction target="/buy">
+          No address connected, pay 0.005 ETH
+        </Button.Transaction>,
+      ],
+    });
+  }
   if (
     typeof balance === "number" &&
     balance < 1 &&
     typeof supply === "number" &&
     supply > 0
   ) {
-    const address = await getAddresForFID(c.frameData?.fid);
     const { request: mint } = await publicClient.simulateContract({
       account,
       address: CONTRACT as `0x`,
