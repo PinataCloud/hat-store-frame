@@ -78,6 +78,21 @@ async function remainingSupply() {
   }
 }
 
+async function calculateAmount(fid: any) {
+  const address = await getAddresForFID(fid);
+  if (address === "null") {
+    return "0.005";
+  }
+
+  const balance = await checkBalance(fid);
+  if (typeof balance === "number" && balance > 0) {
+    return "0.0025";
+  }
+  return "0.005";
+}
+
+
+
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
@@ -166,19 +181,8 @@ app.frame("/ad", async (c) => {
 });
 
 app.transaction("/buy", async (c) => {
-  let amount;
-  const address = await getAddresForFID(c.frameData?.fid);
-  if (address === "null") {
-    amount = "0.005";
-  } else {
-    const balance = await checkBalance(c.frameData?.fid);
-    if (typeof balance === "number" && balance > 0) {
-      amount = "0.0025";
-    } else {
-      amount = "0.005";
-    }
-  }
 
+  const amount = await calculateAmount(c.frameData?.fid)
   console.log(amount)
 
   return c.contract({
