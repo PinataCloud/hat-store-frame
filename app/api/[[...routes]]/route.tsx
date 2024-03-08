@@ -96,6 +96,7 @@ const app = new Frog({
 });
 
 app.use('/ad', fdk.analyticsMiddleware({ frameId: "hats-store", customId: "ad" }))
+app.use('/finish', fdk.analyticsMiddleware({ frameId: "hats-store", customId: "purchased" }))
 
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
