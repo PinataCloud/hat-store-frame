@@ -115,7 +115,7 @@ app.frame("/ad", async (c) => {
   return c.res({
     action: "/finish",
     image:
-      "https://dweb.mypinata.cloud/ipfs/QmaQC9shWhLWQiBuWNa2YGUFARekj5Qm7iCE59H4FzeSi4",
+      "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
     imageAspectRatio: "1:1",
     intents: [
       <Button.Transaction target="/buy">Buy for 0.0025 ETH</Button.Transaction>,
