@@ -5,7 +5,6 @@ import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { PinataFDK, FrameActionPayload } from "pinata-fdk";
 import abi from "./abi.json";
 
 const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
@@ -23,14 +22,8 @@ const walletClient = createWalletClient({
   transport: http(process.env.ALCHEMY_URL),
 });
 
-const fdk = new PinataFDK({
-  pinata_jwt: process.env.PINATA_JWT || "",
-  pinata_gateway: ''
-})
-
 async function getAddresForFID(fid: any) {
   try {
-    let address;
     const data = await fetch(
       `https://api.pinata.cloud/v3/farcaster/users/${fid}`,
       {
@@ -40,11 +33,7 @@ async function getAddresForFID(fid: any) {
       },
     );
     const dataRes = await data.json();
-    if (dataRes.data.verifications > 0) {
-      address = dataRes.data.verifications[0];
-    } else {
-      address = "null";
-    }
+    const address = dataRes.data.verifications[0];
     console.log(address);
     return address;
   } catch (error) {
@@ -86,11 +75,6 @@ async function remainingSupply() {
 }
 
 async function calculateAmount(fid: any) {
-  const address = await getAddresForFID(fid);
-  if (address === "null") {
-    return "0.005";
-  }
-
   const balance = await checkBalance(fid);
   if (typeof balance === "number" && balance > 0) {
     return "0.0025";
@@ -103,7 +87,6 @@ const app = new Frog({
   basePath: "/api",
   // hubApiUrl: 'https://api.hub.wevm.dev',
 });
-
 
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
@@ -120,7 +103,6 @@ app.frame("/", async (c) => {
   });
 });
 
-
 app.frame("/finish", (c) => {
   return c.res({
     image:
@@ -134,21 +116,11 @@ app.frame("/finish", (c) => {
   });
 });
 
-
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
   const address = await getAddresForFID(c.frameData?.fid);
 
-  if (address === "null") {
-    return c.res({
-      action: "/",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-      imageAspectRatio: "1:1",
-      intents: [<Button>No address connected, go back</Button>],
-    });
-  }
   if (
     typeof balance === "number" &&
     balance < 1 &&
@@ -169,8 +141,6 @@ app.frame("/ad", async (c) => {
       hash: mintTransaction,
     });
     console.log("Mint Status:", mintReceipt.status);
-
-    console.log("nft minted");
   }
   return c.res({
     action: "/finish",
