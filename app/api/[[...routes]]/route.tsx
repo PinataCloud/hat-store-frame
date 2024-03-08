@@ -100,6 +100,7 @@ app.frame("/", async (c) => {
       <Button.Transaction target="/buy">Buy for 0.005 ETH</Button.Transaction>,
       <Button action="/ad">Watch ad for 1/2 off</Button>,
     ],
+    title: "Pinta Hat Store",
   });
 });
 
@@ -113,6 +114,7 @@ app.frame("/finish", (c) => {
         Join the Pinata Channel
       </Button.Link>,
     ],
+    title: "Pinta Hat Store",
   });
 });
 
@@ -150,6 +152,7 @@ app.frame("/ad", async (c) => {
     intents: [
       <Button.Transaction target="/buy">Buy for 0.0025 ETH</Button.Transaction>,
     ],
+    title: "Pinta Hat Store",
   });
 });
 
