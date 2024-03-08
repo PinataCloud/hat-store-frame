@@ -109,7 +109,7 @@ app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
   const frameData: any = c.frameData
-  fdk.sendAnalytics("hat-store-frame", frameData, "load")
+  await fdk.sendAnalytics("hat-store-frame", frameData, "load")
   return c.res({
     action: "/finish",
     image:
@@ -123,9 +123,9 @@ app.frame("/", async (c) => {
 });
 
 
-app.frame("/finish", (c) => {
+app.frame("/finish", async (c) => {
   const frameData: any = c.frameData
-  fdk.sendAnalytics("hat-store-frame", frameData, "purchased-hat")
+  await fdk.sendAnalytics("hat-store-frame", frameData, "purchased-hat")
   return c.res({
     image:
       "https://dweb.mypinata.cloud/ipfs/QmZPysm8ZiR9PaNxNGQvqdT2gBjdYsjNskDkZ1vkVs3Tju",
@@ -145,7 +145,7 @@ app.frame("/ad", async (c) => {
   const address = await getAddresForFID(c.frameData?.fid);
 
   const frameData: any = c.frameData
-  fdk.sendAnalytics("hat-store-frame", frameData, "watched-ad")
+  await fdk.sendAnalytics("hat-store-frame", frameData, "watched-ad")
 
   if (address === "null") {
     return c.res({
