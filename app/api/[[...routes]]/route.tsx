@@ -83,32 +83,16 @@ const app = new Frog({
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
-
-  if (typeof balance === "number" && balance === 0) {
-    return c.res({
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeeXny8775RQBZDhSppkRN15zn5nFjQUKeKAvYvdNx986",
-      imageAspectRatio: "1:1",
-      intents: [
-        <Button.Link href="https://warpcast.com/~/channel/pinata">
-          Join the Pinata Channel
-        </Button.Link>,
-      ],
-    });
-  } else {
-    return c.res({
-      action: "/finish",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
-      imageAspectRatio: "1:1",
-      intents: [
-        <Button.Transaction target="/buy">
-          Buy for 0.005 ETH
-        </Button.Transaction>,
-        <Button action="/ad">Watch ad for 1/2 off</Button>,
-      ],
-    });
-  }
+  return c.res({
+    action: "/finish",
+    image:
+      "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
+    imageAspectRatio: "1:1",
+    intents: [
+      <Button.Transaction target="/buy">Buy for 0.005 ETH</Button.Transaction>,
+      <Button action="/ad">Watch ad for 1/2 off</Button>,
+    ],
+  });
 });
 
 app.frame("/finish", (c) => {
@@ -128,7 +112,12 @@ app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
 
-  if (typeof balance === "number" && balance < 1 && typeof supply === 'number' && supply > 0) {
+  if (
+    typeof balance === "number" &&
+    balance < 1 &&
+    typeof supply === "number" &&
+    supply > 0
+  ) {
     const address = await getAddresForFID(c.frameData?.fid);
     const { request: mint } = await publicClient.simulateContract({
       account,
