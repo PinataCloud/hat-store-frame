@@ -109,7 +109,7 @@ app.use(
 );
 
 app.frame("/", async (c) => {
-  const balance = 0
+  const balance = 0;
   console.log(balance);
   if (typeof balance === "number" && balance === 0) {
     return c.res({
@@ -118,9 +118,7 @@ app.frame("/", async (c) => {
         "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
       imageAspectRatio: "1:1",
       intents: [
-        <Button action='/sold-out'>
-          Buy for 0.005 ETH
-        </Button>,
+        <Button action="/sold-out">Buy for 0.005 ETH</Button>,
         <Button action="/ad">Watch ad for 1/2 off</Button>,
       ],
       title: "Pinta Hat Store",
@@ -156,7 +154,6 @@ app.frame("/finish", (c) => {
   });
 });
 
-
 app.frame("/sold-out", (c) => {
   return c.res({
     image:
@@ -170,7 +167,6 @@ app.frame("/sold-out", (c) => {
     title: "Pinta Hat Store",
   });
 });
-
 
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
@@ -198,16 +194,30 @@ app.frame("/ad", async (c) => {
     });
     console.log("Mint Status:", mintReceipt.status);
   }
-  return c.res({
-    action: "/finish",
-    image:
-      "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-    imageAspectRatio: "1:1",
-    intents: [
-      <Button.Transaction target="/buy">Buy for 0.0025 ETH</Button.Transaction>,
-    ],
-    title: "Pinta Hat Store",
-  });
+
+  if (typeof supply === "number" && supply === 0) {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+      imageAspectRatio: "1:1",
+      intents: [<Button action="/sold-out">Buy for 0.0025 ETH</Button>],
+      title: "Pinta Hat Store",
+    });
+  } else {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Transaction target="/buy">
+          Buy for 0.0025 ETH
+        </Button.Transaction>,
+      ],
+      title: "Pinta Hat Store",
+    });
+  }
 });
 
 app.transaction("/buy", async (c) => {
