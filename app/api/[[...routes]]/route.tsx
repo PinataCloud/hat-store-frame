@@ -109,7 +109,7 @@ app.use(
 );
 
 app.frame("/", async (c) => {
-  const balance = 0;
+  const balance =  await remainingSupply();
   console.log(balance);
   if (typeof balance === "number" && balance === 0) {
     return c.res({
