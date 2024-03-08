@@ -135,14 +135,14 @@ app.frame("/ad", async (c) => {
 
   if (address === "null") {
     return c.res({
-      action: "/finish",
+      action: "/",
       image:
         "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
       imageAspectRatio: "1:1",
       intents: [
-        <Button.Transaction target="/buy">
-          No address connected, pay 0.005 ETH
-        </Button.Transaction>,
+        <Button>
+          No address connected, go back
+        </Button>,
       ],
     });
   }
