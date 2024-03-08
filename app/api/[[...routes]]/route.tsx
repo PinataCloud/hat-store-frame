@@ -5,6 +5,7 @@ import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
+import { PinataFDK, FrameActionPayload } from "pinata-fdk";
 import abi from "./abi.json";
 
 const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
@@ -21,6 +22,11 @@ const walletClient = createWalletClient({
   chain: base,
   transport: http(process.env.ALCHEMY_URL),
 });
+
+const fdk = new PinataFDK({
+  pinata_jwt: process.env.PINATA_JWT || "",
+  pinata_gateway: ''
+})
 
 async function getAddresForFID(fid: any) {
   try {
@@ -39,7 +45,7 @@ async function getAddresForFID(fid: any) {
     } else {
       address = "null";
     }
-    console.log(address)
+    console.log(address);
     return address;
   } catch (error) {
     console.log(error);
@@ -92,17 +98,18 @@ async function calculateAmount(fid: any) {
   return "0.005";
 }
 
-
-
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   // hubApiUrl: 'https://api.hub.wevm.dev',
 });
 
+
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
+  const frameData: any = c.frameData
+  fdk.sendAnalytics("hat-store-frame", frameData, "load")
   return c.res({
     action: "/finish",
     image:
@@ -115,7 +122,10 @@ app.frame("/", async (c) => {
   });
 });
 
+
 app.frame("/finish", (c) => {
+  const frameData: any = c.frameData
+  fdk.sendAnalytics("hat-store-frame", frameData, "purchased-hat")
   return c.res({
     image:
       "https://dweb.mypinata.cloud/ipfs/QmZPysm8ZiR9PaNxNGQvqdT2gBjdYsjNskDkZ1vkVs3Tju",
@@ -128,10 +138,14 @@ app.frame("/finish", (c) => {
   });
 });
 
+
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
   const address = await getAddresForFID(c.frameData?.fid);
+
+  const frameData: any = c.frameData
+  fdk.sendAnalytics("hat-store-frame", frameData, "watched-ad")
 
   if (address === "null") {
     return c.res({
@@ -139,11 +153,7 @@ app.frame("/ad", async (c) => {
       image:
         "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
       imageAspectRatio: "1:1",
-      intents: [
-        <Button>
-          No address connected, go back
-        </Button>,
-      ],
+      intents: [<Button>No address connected, go back</Button>],
     });
   }
   if (
@@ -181,9 +191,8 @@ app.frame("/ad", async (c) => {
 });
 
 app.transaction("/buy", async (c) => {
-
-  const amount = await calculateAmount(c.frameData?.fid)
-  console.log(amount)
+  const amount = await calculateAmount(c.frameData?.fid);
+  console.log(amount);
 
   return c.contract({
     abi: abi.abi,
