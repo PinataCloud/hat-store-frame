@@ -108,8 +108,6 @@ const app = new Frog({
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
-  const frameData: any = c.frameData
-  await fdk.sendAnalytics("hat-store-frame", frameData, "load")
   return c.res({
     action: "/finish",
     image:
@@ -123,9 +121,7 @@ app.frame("/", async (c) => {
 });
 
 
-app.frame("/finish", async (c) => {
-  const frameData: any = c.frameData
-  await fdk.sendAnalytics("hat-store-frame", frameData, "purchased-hat")
+app.frame("/finish", (c) => {
   return c.res({
     image:
       "https://dweb.mypinata.cloud/ipfs/QmZPysm8ZiR9PaNxNGQvqdT2gBjdYsjNskDkZ1vkVs3Tju",
@@ -143,9 +139,6 @@ app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
   const address = await getAddresForFID(c.frameData?.fid);
-
-  const frameData: any = c.frameData
-  await fdk.sendAnalytics("hat-store-frame", frameData, "watched-ad")
 
   if (address === "null") {
     return c.res({
