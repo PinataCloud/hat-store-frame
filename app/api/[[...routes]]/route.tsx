@@ -59,14 +59,6 @@ async function remainingSupply() {
   }
 }
 
-async function calculateAmount(address: any) {
-  const balance = await checkBalance(address);
-  if (typeof balance === "number" && balance > 0) {
-    return "0.0025";
-  }
-  return "0.005";
-}
-
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
