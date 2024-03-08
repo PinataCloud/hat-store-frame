@@ -5,7 +5,14 @@ import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
+import { PinataFDK } from "pinata-fdk"
 import abi from "./abi.json";
+
+
+const fdk = new PinataFDK({
+  pinata_jwt: process.env.PINATA_JWT || "",
+  pinata_gateway: ""
+})
 
 const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
 
