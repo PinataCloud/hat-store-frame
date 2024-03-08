@@ -13,7 +13,7 @@ const fdk = new PinataFDK({
   pinata_gateway: "",
 });
 
-const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
+//const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
 
 const account = privateKeyToAccount((process.env.PRIVATE_KEY as `0x`) || "");
 
@@ -52,7 +52,7 @@ async function checkBalance(fid: any) {
   try {
     const address = await getAddresForFID(fid);
     const balance = await publicClient.readContract({
-      address: CONTRACT as `0x`,
+      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
       abi: abi.abi,
       functionName: "balanceOf",
       args: [address, 0],
@@ -68,7 +68,7 @@ async function checkBalance(fid: any) {
 async function remainingSupply() {
   try {
     const balance = await publicClient.readContract({
-      address: CONTRACT as `0x`,
+      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
       abi: abi.abi,
       functionName: "totalSupply",
     });
@@ -181,7 +181,7 @@ app.frame("/ad", async (c) => {
   ) {
     const { request: mint } = await publicClient.simulateContract({
       account,
-      address: CONTRACT as `0x`,
+      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
       abi: abi.abi,
       functionName: "mint",
       args: [address],
@@ -229,7 +229,7 @@ app.transaction("/buy", async (c) => {
     chainId: "eip155:8453",
     functionName: "buyHat",
     args: [c.frameData?.fid],
-    to: CONTRACT as `0x`,
+    to: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
     value: parseEther(amount),
   });
 });
