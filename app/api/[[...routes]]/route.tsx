@@ -118,9 +118,9 @@ app.frame("/", async (c) => {
         "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
       imageAspectRatio: "1:1",
       intents: [
-        <Button.Transaction target="/buy">
+        <Button action='/sold-out'>
           Buy for 0.005 ETH
-        </Button.Transaction>,
+        </Button>,
         <Button action="/ad">Watch ad for 1/2 off</Button>,
       ],
       title: "Pinta Hat Store",
