@@ -95,6 +95,8 @@ const app = new Frog({
   // hubApiUrl: 'https://api.hub.wevm.dev',
 });
 
+app.use('/ad', fdk.analyticsMiddleware({ frameId: "hats-store", customId: "ad" }))
+
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
