@@ -39,6 +39,7 @@ async function getAddresForFID(fid: any) {
     } else {
       address = "null";
     }
+    console.log(address)
     return address;
   } catch (error) {
     console.log(error);
@@ -188,7 +189,7 @@ app.transaction("/buy", async (c) => {
     abi: abi.abi,
     chainId: "eip155:8453",
     functionName: "buyHat",
-    args: [c.frameData?.fid || 0],
+    args: [c.frameData?.fid],
     to: CONTRACT as `0x`,
     value: parseEther(amount),
   });
