@@ -1,6 +1,6 @@
 /** @jsxImportSource frog/jsx */
 
-import { Button, Frog, parseEther } from "frog";
+import { Button, Frog, TextInput, parseEther } from "frog";
 import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -28,31 +28,10 @@ const walletClient = createWalletClient({
   transport: http(process.env.ALCHEMY_URL),
 });
 
-async function getAddresForFID(fid: any) {
+async function checkBalance(address: any) {
   try {
-    const data = await fetch(
-      `https://api.pinata.cloud/v3/farcaster/users/${fid}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PINATA_JWT}`,
-        },
-      },
-    );
-    const dataRes = await data.json();
-    const address = dataRes.data.verifications[0];
-    console.log(address);
-    return address;
-  } catch (error) {
-    console.log(error);
-    return error;
-  }
-}
-
-async function checkBalance(fid: any) {
-  try {
-    const address = await getAddresForFID(fid);
     const balance = await publicClient.readContract({
-      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
+      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
       abi: abi.abi,
       functionName: "balanceOf",
       args: [address, 0],
@@ -68,7 +47,7 @@ async function checkBalance(fid: any) {
 async function remainingSupply() {
   try {
     const balance = await publicClient.readContract({
-      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
+      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
       abi: abi.abi,
       functionName: "totalSupply",
     });
@@ -80,8 +59,8 @@ async function remainingSupply() {
   }
 }
 
-async function calculateAmount(fid: any) {
-  const balance = await checkBalance(fid);
+async function calculateAmount(address: any) {
+  const balance = await checkBalance(address);
   if (typeof balance === "number" && balance > 0) {
     return "0.0025";
   }
@@ -109,7 +88,7 @@ app.use(
 );
 
 app.frame("/", async (c) => {
-  const balance =  await remainingSupply();
+  const balance = await remainingSupply();
   console.log(balance);
   if (typeof balance === "number" && balance === 0) {
     return c.res({
@@ -169,9 +148,36 @@ app.frame("/sold-out", (c) => {
 });
 
 app.frame("/ad", async (c) => {
-  const balance = await checkBalance(c.frameData?.fid);
   const supply = await remainingSupply();
-  const address = await getAddresForFID(c.frameData?.fid);
+
+  if (typeof supply === "number" && supply === 0) {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+      imageAspectRatio: "1:1",
+      intents: [<Button action="/sold-out">Buy for 0.0025 ETH</Button>],
+      title: "Pinta Hat Store",
+    });
+  } else {
+    return c.res({
+      action: "/coupon",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+      imageAspectRatio: "1:1",
+      intents: [
+        <TextInput placeholder="Wallet Address (not ens)" />,
+        <Button>Receive Coupon</Button>,
+      ],
+      title: "Pinta Hat Store",
+    });
+  }
+});
+
+app.frame("/coupon", async (c) => {
+  const supply = await remainingSupply();
+  const address = c.inputText;
+  const balance = await checkBalance(address);
 
   if (
     typeof balance === "number" &&
@@ -181,7 +187,7 @@ app.frame("/ad", async (c) => {
   ) {
     const { request: mint } = await publicClient.simulateContract({
       account,
-      address: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
+      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
       abi: abi.abi,
       functionName: "mint",
       args: [address],
@@ -195,42 +201,37 @@ app.frame("/ad", async (c) => {
     console.log("Mint Status:", mintReceipt.status);
   }
 
-  if (typeof supply === "number" && supply === 0) {
-    return c.res({
-      action: "/finish",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-      imageAspectRatio: "1:1",
-      intents: [<Button action="/sold-out">Buy for 0.0025 ETH</Button>],
-      title: "Pinta Hat Store",
-    });
-  } else {
-    return c.res({
-      action: "/finish",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-      imageAspectRatio: "1:1",
-      intents: [
-        <Button.Transaction target="/buy">
-          Buy for 0.0025 ETH
-        </Button.Transaction>,
-      ],
-      title: "Pinta Hat Store",
-    });
-  }
+  return c.res({
+    action: "/finish",
+    image:
+      "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
+    imageAspectRatio: "1:1",
+    intents: [
+      <Button.Transaction target="/buy-discount">Buy for 0.0025 ETH</Button.Transaction>,
+    ],
+    title: "Pinta Hat Store",
+  });
 });
 
 app.transaction("/buy", async (c) => {
-  const amount = await calculateAmount(c.frameData?.fid);
-  console.log(amount);
-
   return c.contract({
     abi: abi.abi,
     chainId: "eip155:8453",
     functionName: "buyHat",
     args: [c.frameData?.fid],
-    to: '0x36e899b6908dc588e85ed0979e8e0dcd7e02a941',
-    value: parseEther(amount),
+    to: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
+    value: parseEther('0.005'),
+  });
+});
+
+app.transaction("/buy-discount", async (c) => {
+  return c.contract({
+    abi: abi.abi,
+    chainId: "eip155:8453",
+    functionName: "buyHat",
+    args: [c.frameData?.fid],
+    to: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
+    value: parseEther('0.0025'),
   });
 });
 
