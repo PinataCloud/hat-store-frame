@@ -58,6 +58,21 @@ async function checkBalance(fid: any) {
   }
 }
 
+async function remainingSupply() {
+  try {
+    const balance = await publicClient.readContract({
+      address: CONTRACT as `0x`,
+      abi: abi.abi,
+      functionName: "totalSupply",
+    });
+    const readableBalance = Number(balance);
+    return readableBalance;
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
@@ -65,17 +80,35 @@ const app = new Frog({
   // hubApiUrl: 'https://api.hub.wevm.dev',
 });
 
-app.frame("/", (c) => {
-  return c.res({
-    action: "/finish",
-    image:
-      "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
-    imageAspectRatio: "1:1",
-    intents: [
-      <Button.Transaction target="/buy">Buy for 0.005 ETH</Button.Transaction>,
-      <Button action="/ad">Watch ad for 1/2 off</Button>,
-    ],
-  });
+app.frame("/", async (c) => {
+  const balance = await remainingSupply();
+  console.log(balance);
+
+  if (typeof balance === "number" && balance === 0) {
+    return c.res({
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeeXny8775RQBZDhSppkRN15zn5nFjQUKeKAvYvdNx986",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Link href="https://warpcast.com/~/channel/pinata">
+          Join the Pinata Channel
+        </Button.Link>,
+      ],
+    });
+  } else {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Transaction target="/buy">
+          Buy for 0.005 ETH
+        </Button.Transaction>,
+        <Button action="/ad">Watch ad for 1/2 off</Button>,
+      ],
+    });
+  }
 });
 
 app.frame("/finish", (c) => {
@@ -84,7 +117,9 @@ app.frame("/finish", (c) => {
       "https://dweb.mypinata.cloud/ipfs/QmZPysm8ZiR9PaNxNGQvqdT2gBjdYsjNskDkZ1vkVs3Tju",
     imageAspectRatio: "1:1",
     intents: [
-      <Button.Link href="https://pinata.cloud">Learn More</Button.Link>,
+      <Button.Link href="https://warpcast.com/~/channel/pinata">
+        Join the Pinata Channel
+      </Button.Link>,
     ],
   });
 });
