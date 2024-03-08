@@ -5,14 +5,13 @@ import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { PinataFDK } from "pinata-fdk"
+import { PinataFDK } from "pinata-fdk";
 import abi from "./abi.json";
-
 
 const fdk = new PinataFDK({
   pinata_jwt: process.env.PINATA_JWT || "",
-  pinata_gateway: ""
-})
+  pinata_gateway: "",
+});
 
 const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
 
@@ -95,23 +94,52 @@ const app = new Frog({
   // hubApiUrl: 'https://api.hub.wevm.dev',
 });
 
-app.use('/ad', fdk.analyticsMiddleware({ frameId: "hats-store", customId: "ad" }))
-app.use('/finish', fdk.analyticsMiddleware({ frameId: "hats-store", customId: "purchased" }))
+app.use(
+  "/ad",
+  fdk.analyticsMiddleware({ frameId: "hats-store", customId: "ad" }),
+);
+app.use(
+  "/finish",
+  fdk.analyticsMiddleware({ frameId: "hats-store", customId: "purchased" }),
+);
+
+app.use(
+  "/sold-out",
+  fdk.analyticsMiddleware({ frameId: "hats-store", customId: "soldOut" }),
+);
 
 app.frame("/", async (c) => {
-  const balance = await remainingSupply();
+  const balance = 0
   console.log(balance);
-  return c.res({
-    action: "/finish",
-    image:
-      "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
-    imageAspectRatio: "1:1",
-    intents: [
-      <Button.Transaction target="/buy">Buy for 0.005 ETH</Button.Transaction>,
-      <Button action="/ad">Watch ad for 1/2 off</Button>,
-    ],
-    title: "Pinta Hat Store",
-  });
+  if (typeof balance === "number" && balance === 0) {
+    return c.res({
+      action: "/sold-out",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Transaction target="/buy">
+          Buy for 0.005 ETH
+        </Button.Transaction>,
+        <Button action="/ad">Watch ad for 1/2 off</Button>,
+      ],
+      title: "Pinta Hat Store",
+    });
+  } else {
+    return c.res({
+      action: "/finish",
+      image:
+        "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
+      imageAspectRatio: "1:1",
+      intents: [
+        <Button.Transaction target="/buy">
+          Buy for 0.005 ETH
+        </Button.Transaction>,
+        <Button action="/ad">Watch ad for 1/2 off</Button>,
+      ],
+      title: "Pinta Hat Store",
+    });
+  }
 });
 
 app.frame("/finish", (c) => {
@@ -127,6 +155,22 @@ app.frame("/finish", (c) => {
     title: "Pinta Hat Store",
   });
 });
+
+
+app.frame("/sold-out", (c) => {
+  return c.res({
+    image:
+      "https://dweb.mypinata.cloud/ipfs/QmeeXny8775RQBZDhSppkRN15zn5nFjQUKeKAvYvdNx986",
+    imageAspectRatio: "1:1",
+    intents: [
+      <Button.Link href="https://warpcast.com/~/channel/pinata">
+        Join the Pinata Channel
+      </Button.Link>,
+    ],
+    title: "Pinta Hat Store",
+  });
+});
+
 
 app.frame("/ad", async (c) => {
   const balance = await checkBalance(c.frameData?.fid);
