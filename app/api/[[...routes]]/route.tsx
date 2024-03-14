@@ -4,7 +4,7 @@ import { Button, Frog, TextInput, parseEther } from "frog";
 import { handle } from "frog/next";
 import { createWalletClient, http, createPublicClient } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 import { PinataFDK } from "pinata-fdk";
 import abi from "./abi.json";
 
@@ -13,25 +13,25 @@ const fdk = new PinataFDK({
   pinata_gateway: "",
 });
 
-//const CONTRACT = `${process.env.CONTRACT_ADDRESS}`;
+const CONTRACT = process.env.CONTRACT_ADDRESS as `0x` || ""
 
 const account = privateKeyToAccount((process.env.PRIVATE_KEY as `0x`) || "");
 
 const publicClient = createPublicClient({
-  chain: base,
+  chain: baseSepolia,
   transport: http(process.env.ALCHEMY_URL),
 });
 
 const walletClient = createWalletClient({
   account,
-  chain: base,
+  chain: baseSepolia,
   transport: http(process.env.ALCHEMY_URL),
 });
 
 async function checkBalance(address: any) {
   try {
     const balance = await publicClient.readContract({
-      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
+      address: CONTRACT,
       abi: abi.abi,
       functionName: "balanceOf",
       args: [address, 0],
@@ -47,7 +47,7 @@ async function checkBalance(address: any) {
 async function remainingSupply() {
   try {
     const balance = await publicClient.readContract({
-      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
+      address: CONTRACT,
       abi: abi.abi,
       functionName: "totalSupply",
     });
@@ -62,7 +62,6 @@ async function remainingSupply() {
 const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
-  // hubApiUrl: 'https://api.hub.wevm.dev',
 });
 
 app.use(
@@ -74,25 +73,20 @@ app.use(
   fdk.analyticsMiddleware({ frameId: "hats-store", customId: "purchased" }),
 );
 
-app.use(
-  "/sold-out",
-  fdk.analyticsMiddleware({ frameId: "hats-store", customId: "soldOut" }),
-);
-
 app.frame("/", async (c) => {
   const balance = await remainingSupply();
   console.log(balance);
   if (typeof balance === "number" && balance === 0) {
     return c.res({
-      action: "/sold-out",
       image:
-        "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
+        "https://dweb.mypinata.cloud/ipfs/QmeeXny8775RQBZDhSppkRN15zn5nFjQUKeKAvYvdNx986",
       imageAspectRatio: "1:1",
       intents: [
-        <Button action="/sold-out">Buy for 0.005 ETH</Button>,
-        <Button action="/ad">Watch ad for 1/2 off</Button>,
+        <Button.Link href="https://warpcast.com/~/channel/pinata">
+          Join the Pinata Channel
+        </Button.Link>,
       ],
-      title: "Pinta Hat Store",
+      title: "Pinta Hat Store - SOLD OUT",
     });
   } else {
     return c.res({
@@ -101,7 +95,7 @@ app.frame("/", async (c) => {
         "https://dweb.mypinata.cloud/ipfs/QmeC7uQZqkjmc1T6sufzbJWQpoeoYjQPxCXKUSoDrXfQFy",
       imageAspectRatio: "1:1",
       intents: [
-        <Button.Transaction target="/buy">
+        <Button.Transaction target="/buy/0.0005">
           Buy for 0.005 ETH
         </Button.Transaction>,
         <Button action="/ad">Watch ad for 1/2 off</Button>,
@@ -125,45 +119,18 @@ app.frame("/finish", (c) => {
   });
 });
 
-app.frame("/sold-out", (c) => {
+app.frame("/ad", async (c) => {
   return c.res({
+    action: "/coupon",
     image:
-      "https://dweb.mypinata.cloud/ipfs/QmeeXny8775RQBZDhSppkRN15zn5nFjQUKeKAvYvdNx986",
+      "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
     imageAspectRatio: "1:1",
     intents: [
-      <Button.Link href="https://warpcast.com/~/channel/pinata">
-        Join the Pinata Channel
-      </Button.Link>,
+      <TextInput placeholder="Wallet Address (not ens)" />,
+      <Button>Receive Coupon</Button>,
     ],
     title: "Pinta Hat Store",
   });
-});
-
-app.frame("/ad", async (c) => {
-  const supply = await remainingSupply();
-
-  if (typeof supply === "number" && supply === 0) {
-    return c.res({
-      action: "/finish",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-      imageAspectRatio: "1:1",
-      intents: [<Button action="/sold-out">Buy for 0.0025 ETH</Button>],
-      title: "Pinta Hat Store",
-    });
-  } else {
-    return c.res({
-      action: "/coupon",
-      image:
-        "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
-      imageAspectRatio: "1:1",
-      intents: [
-        <TextInput placeholder="Wallet Address (not ens)" />,
-        <Button>Receive Coupon</Button>,
-      ],
-      title: "Pinta Hat Store",
-    });
-  }
 });
 
 app.frame("/coupon", async (c) => {
@@ -179,7 +146,7 @@ app.frame("/coupon", async (c) => {
   ) {
     const { request: mint } = await publicClient.simulateContract({
       account,
-      address: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
+      address: CONTRACT,
       abi: abi.abi,
       functionName: "mint",
       args: [address],
@@ -199,31 +166,26 @@ app.frame("/coupon", async (c) => {
       "https://dweb.mypinata.cloud/ipfs/QmeUmBtAMBfwcFRLdoaCVJUNSXeAPzEy3dDGomL32X8HuP",
     imageAspectRatio: "1:1",
     intents: [
-      <Button.Transaction target="/buy-discount">Buy for 0.0025 ETH</Button.Transaction>,
+      <Button.Transaction target="/buy/0.0025">
+        Buy for 0.0025 ETH
+      </Button.Transaction>,
     ],
     title: "Pinta Hat Store",
   });
 });
 
-app.transaction("/buy", async (c) => {
-  return c.contract({
-    abi: abi.abi,
-    chainId: "eip155:8453",
-    functionName: "buyHat",
-    args: [c.frameData?.fid],
-    to: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
-    value: parseEther('0.005'),
-  });
-});
+app.transaction("/buy/:price", async (c) => {
+  
+  const price = c.req.param('price')
 
-app.transaction("/buy-discount", async (c) => {
   return c.contract({
     abi: abi.abi,
-    chainId: "eip155:8453",
+    // @ts-ignore
+    chainId: "eip155:84532",
     functionName: "buyHat",
     args: [c.frameData?.fid],
-    to: "0x36e899b6908dc588e85ed0979e8e0dcd7e02a941",
-    value: parseEther('0.0025'),
+    to: CONTRACT,
+    value: parseEther(`${price}`),
   });
 });
 
